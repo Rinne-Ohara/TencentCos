@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
@@ -20,9 +21,10 @@ class TencentCosManager {
     OnFail? onFail,
   }) async {
     _channel.setMethodCallHandler((call) => _handler(call, onSendProgress));
-    final resp = await _channel.invokeMethod("upload", map) as Map<String, Object>;
-    bool isSuccess = resp["isSuccess"] as bool? ?? false;
-    String message = resp["message"] as String? ?? "";
+    final resp = await _channel.invokeMethod("upload", map) as String? ?? "";
+    final params = json.decode(resp);
+    bool isSuccess = params["isSuccess"] as bool? ?? false;
+    String message = params["message"] as String? ?? "";
     if (isSuccess) {
       onSuccess?.call(message);
     } else {
@@ -36,7 +38,8 @@ class TencentCosManager {
   static Future<void> _handler(MethodCall call, ProgressCallback? onSendProgress) async {
     switch (call.method) {
       case 'uploadProgress':
-        final params = call.arguments as Map<String, Object>;
+        final resp = call.arguments as String? ?? "";
+        final params = json.decode(resp);
         int current = params["current"] as int? ?? 0;
         int total = params["current"] as int? ?? 0;
         onSendProgress?.call(current, total);

@@ -17,6 +17,8 @@ import com.tencent.cos.xml.transfer.COSXMLUploadTask;
 import com.tencent.cos.xml.transfer.TransferConfig;
 import com.tencent.cos.xml.transfer.TransferManager;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -70,7 +72,8 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
                                     Map<String, Object> params = new HashMap<>();
                                     params.put("current", complete);
                                     params.put("total", target);
-                                    channel.invokeMethod("uploadProgress", params);
+                                    JSONObject jsonObject=new JSONObject(params);
+                                    channel.invokeMethod("uploadProgress", jsonObject.toString());
                                 }
                             });
 
@@ -86,7 +89,8 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
                                     Map<String, Object> params = new HashMap<>();
                                     params.put("isSuccess", true);
                                     params.put("message", cosXmlResult.printResult());
-                                    result.success(params);
+                                    JSONObject jsonObject=new JSONObject(params);
+                                    result.success( jsonObject.toString());
                                 }
                             });
 
@@ -107,7 +111,8 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
                                         message += "\n" + e1.toString();
                                     }
                                     params.put("message", message);
-                                    result.success(params);
+                                    JSONObject jsonObject=new JSONObject(params);
+                                    result.success(jsonObject.toString());
                                 }
                             });
 
