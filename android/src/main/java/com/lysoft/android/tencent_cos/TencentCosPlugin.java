@@ -37,6 +37,7 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
 
     private Context mContext;
     private Activity mActivity;
+    private Map<String, COSXMLUploadTask> taskMap = new HashMap<>();
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -45,82 +46,118 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
         channel.setMethodCallHandler(new MethodChannel.MethodCallHandler() {
             @Override
             public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+                String tag = (String) call.argument("tag");
                 if (call.method.equals("upload")) {
-                    String region = (String) call.argument("region");
-                    String tmpSecretId = (String) call.argument("tmpSecretId");
-                    String tmpSecretKey = (String) call.argument("tmpSecretKey");
-                    String sessionToken = (String) call.argument("sessionToken");
-                    String startTime = (String) call.argument("startTime");
-                    String expiredTime = (String) call.argument("expiredTime");
-                    String bucket = (String) call.argument("bucket");
-                    String key = (String) call.argument("key");
-                    String filePath = (String) call.argument("filePath");
-                    CosXmlService cosXmlService = CosServiceFactory.getCosXmlService(mContext,
-                            region, tmpSecretId, tmpSecretKey, sessionToken,
-                            Long.parseLong(startTime), Long.parseLong(expiredTime), true);
-
-                    TransferManager transferManager = new TransferManager(cosXmlService, new TransferConfig.Builder().build());
-
-                    COSXMLUploadTask cosxmlUploadTask = transferManager.upload(bucket, key, filePath, null);
-
-                    cosxmlUploadTask.setCosXmlProgressListener(new CosXmlProgressListener() {
-                        @Override
-                        public void onProgress(long complete, long target) {
-                            mActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Map<String, Object> params = new HashMap<>();
-                                    params.put("current", complete);
-                                    params.put("total", target);
-                                    JSONObject jsonObject=new JSONObject(params);
-                                    channel.invokeMethod("uploadProgress", jsonObject.toString());
-                                }
-                            });
-
-                        }
-                    });
-
-                    cosxmlUploadTask.setCosXmlResultListener(new CosXmlResultListener() {
-                        @Override
-                        public void onSuccess(CosXmlRequest cosXmlRequest, CosXmlResult cosXmlResult) {
-                            mActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Map<String, Object> params = new HashMap<>();
-                                    params.put("isSuccess", true);
-                                    params.put("message", cosXmlResult.printResult());
-                                    JSONObject jsonObject=new JSONObject(params);
-                                    result.success( jsonObject.toString());
-                                }
-                            });
-
-                        }
-
-                        @Override
-                        public void onFail(CosXmlRequest cosXmlRequest, @Nullable CosXmlClientException e, @Nullable CosXmlServiceException e1) {
-                            mActivity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Map<String, Object> params = new HashMap<>();
-                                    params.put("isSuccess", false);
-                                    String message = "";
-                                    if (e != null) {
-                                        message += e.toString();
-                                    }
-                                    if (e1 != null) {
-                                        message += "\n" + e1.toString();
-                                    }
-                                    params.put("message", message);
-                                    JSONObject jsonObject=new JSONObject(params);
-                                    result.success(jsonObject.toString());
-                                }
-                            });
-
-                        }
-                    });
+                    uploadFile(call, result);
+                } else if (call.method.equals("resume")) {
+                    resume(tag);
+                } else if (call.method.equals("pause")) {
+                    pause(tag);
+                } else if (call.method.equals("cancel")) {
+                    cancel(tag);
                 }
+
             }
         });
+    }
+
+
+    private void uploadFile(MethodCall call, MethodChannel.Result result) {
+        String tag = (String) call.argument("tag");
+        String region = (String) call.argument("region");
+        String tmpSecretId = (String) call.argument("tmpSecretId");
+        String tmpSecretKey = (String) call.argument("tmpSecretKey");
+        String sessionToken = (String) call.argument("sessionToken");
+        String startTime = (String) call.argument("startTime");
+        String expiredTime = (String) call.argument("expiredTime");
+        String bucket = (String) call.argument("bucket");
+        String key = (String) call.argument("key");
+        String filePath = (String) call.argument("filePath");
+        CosXmlService cosXmlService = CosServiceFactory.getCosXmlService(mContext,
+                region, tmpSecretId, tmpSecretKey, sessionToken,
+                Long.parseLong(startTime), Long.parseLong(expiredTime), true);
+
+        TransferManager transferManager = new TransferManager(cosXmlService, new TransferConfig.Builder().build());
+
+        COSXMLUploadTask cosxmlUploadTask = transferManager.upload(bucket, key, filePath, null);
+        taskMap.put(tag, cosxmlUploadTask);
+        cosxmlUploadTask.setCosXmlProgressListener(new CosXmlProgressListener() {
+            @Override
+            public void onProgress(long complete, long target) {
+                mActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Map<String, Object> params = new HashMap<>();
+                        params.put("current", complete);
+                        params.put("total", target);
+                        JSONObject jsonObject = new JSONObject(params);
+                        channel.invokeMethod("uploadProgress", jsonObject.toString());
+                    }
+                });
+
+            }
+        });
+
+        cosxmlUploadTask.setCosXmlResultListener(new CosXmlResultListener() {
+            @Override
+            public void onSuccess(CosXmlRequest cosXmlRequest, CosXmlResult cosXmlResult) {
+                taskMap.remove(tag);
+                mActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Map<String, Object> params = new HashMap<>();
+                        params.put("isSuccess", true);
+                        params.put("message", cosXmlResult.printResult());
+                        JSONObject jsonObject = new JSONObject(params);
+                        result.success(jsonObject.toString());
+                    }
+                });
+
+            }
+
+            @Override
+            public void onFail(CosXmlRequest cosXmlRequest, @Nullable CosXmlClientException e, @Nullable CosXmlServiceException e1) {
+                mActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Map<String, Object> params = new HashMap<>();
+                        params.put("isSuccess", false);
+                        String message = "";
+                        if (e != null) {
+                            message += e.toString();
+                        }
+                        if (e1 != null) {
+                            message += "\n" + e1.toString();
+                        }
+                        params.put("message", message);
+                        JSONObject jsonObject = new JSONObject(params);
+                        result.success(jsonObject.toString());
+                    }
+                });
+
+            }
+        });
+    }
+
+    private void cancel(String tag) {
+        if (taskMap.containsKey(tag)) {
+            COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
+            cosxmlUploadTask.cancel();
+        }
+    }
+
+    private void pause(String tag) {
+        if (taskMap.containsKey(tag)) {
+            COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
+            cosxmlUploadTask.pause();
+        }
+    }
+
+    private void resume(String tag) {
+        if (taskMap.containsKey(tag)) {
+            COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
+            cosxmlUploadTask.resume();
+        }
     }
 
     @Override

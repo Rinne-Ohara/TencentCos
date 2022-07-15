@@ -32,6 +32,18 @@ class TencentCosManager {
     }
   }
 
+  static Future<void> resume(String tag) async {
+    await _channel.invokeMethod("resume", tag);
+  }
+
+  static Future<void> pause(String tag) async {
+    await _channel.invokeMethod("pause", tag);
+  }
+
+  static Future<void> cancel(String tag) async {
+    await _channel.invokeMethod("cancel", tag);
+  }
+
   /// 获取原生平台回传的信息
   /// engineState：引擎状态
   /// engineDownloadProgress：引擎下载进度
