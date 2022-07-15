@@ -53,7 +53,7 @@ class TencentCosManager {
         final resp = call.arguments as String? ?? "";
         final params = json.decode(resp);
         int current = params["current"] as int? ?? 0;
-        int total = params["current"] as int? ?? 0;
+        int total = params["total"] as int? ?? 0;
         onSendProgress?.call(current, total);
         break;
     }
