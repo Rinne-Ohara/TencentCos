@@ -51,14 +51,14 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
                     case "upload":
                         uploadFile(call, result);
                         break;
-                    case "resume":
-                        resume(tag);
+                    case "cosResume":
+                        cosResume(tag);
                         break;
-                    case "pause":
-                        pause(tag);
+                    case "cosPause":
+                        cosPause(tag);
                         break;
-                    case "cancel":
-                        cancel(tag);
+                    case "cosCancel":
+                        cosCancel(tag);
                         break;
                 }
             }
@@ -143,21 +143,21 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
         });
     }
 
-    private void cancel(String tag) {
+    private void cosCancel(String tag) {
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.cancel();
         }
     }
 
-    private void pause(String tag) {
+    private void cosPause(String tag) {
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.pause();
         }
     }
 
-    private void resume(String tag) {
+    private void cosResume(String tag) {
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.resume();
