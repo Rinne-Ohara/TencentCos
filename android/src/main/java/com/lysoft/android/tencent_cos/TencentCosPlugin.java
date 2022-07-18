@@ -47,19 +47,18 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
         channel.setMethodCallHandler(new MethodChannel.MethodCallHandler() {
             @Override
             public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-                String tag = (String) call.argument("tag");
                 switch (call.method) {
                     case "upload":
                         uploadFile(call, result);
                         break;
                     case "resume":
-                        resume(tag);
+                        resume(call);
                         break;
                     case "pause":
-                        pause(tag);
+                        pause(call);
                         break;
                     case "cancel":
-                        cancel(tag);
+                        cancel(call);
                         break;
                 }
 
@@ -145,22 +144,24 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
         });
     }
 
-    private void cancel(String tag) {
+    private void cancel(MethodCall call) {
+        String tag = (String) call.arguments;
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.cancel();
         }
     }
 
-    private void pause(String tag) {
-        Log.e("CosPause","TAG:"+tag);
+    private void pause(MethodCall call) {
+        String tag = (String) call.arguments;
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.pause();
         }
     }
 
-    private void resume(String tag) {
+    private void resume(MethodCall call) {
+        String tag = (String) call.arguments;
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.resume();
