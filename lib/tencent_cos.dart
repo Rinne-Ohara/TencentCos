@@ -33,15 +33,15 @@ class TencentCosManager {
   }
 
   static Future<void> resume(String tag) async {
-    await _channel.invokeMethod("cosResume", tag);
+    await _channel.invokeMethod("resume", tag);
   }
 
   static Future<void> pause(String tag) async {
-    await _channel.invokeMethod("cosPause", tag);
+    await _channel.invokeMethod("pause", tag);
   }
 
   static Future<void> cancel(String tag) async {
-    await _channel.invokeMethod("cosCancel", tag);
+    await _channel.invokeMethod("cancel", tag);
   }
 
   /// 获取原生平台回传的信息

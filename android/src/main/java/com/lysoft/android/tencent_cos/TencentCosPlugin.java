@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -51,16 +52,17 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
                     case "upload":
                         uploadFile(call, result);
                         break;
-                    case "cosResume":
-                        cosResume(tag);
+                    case "resume":
+                        resume(tag);
                         break;
-                    case "cosPause":
-                        cosPause(tag);
+                    case "pause":
+                        pause(tag);
                         break;
-                    case "cosCancel":
-                        cosCancel(tag);
+                    case "cancel":
+                        cancel(tag);
                         break;
                 }
+
             }
         });
     }
@@ -143,21 +145,22 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
         });
     }
 
-    private void cosCancel(String tag) {
+    private void cancel(String tag) {
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.cancel();
         }
     }
 
-    private void cosPause(String tag) {
+    private void pause(String tag) {
+        Log.e("CosPause","TAG:"+tag);
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.pause();
         }
     }
 
-    private void cosResume(String tag) {
+    private void resume(String tag) {
         if (taskMap.containsKey(tag)) {
             COSXMLUploadTask cosxmlUploadTask = taskMap.get(tag);
             cosxmlUploadTask.resume();
