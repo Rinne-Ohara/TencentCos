@@ -47,16 +47,20 @@ public class TencentCosPlugin implements FlutterPlugin, ActivityAware {
             @Override
             public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
                 String tag = (String) call.argument("tag");
-                if (call.method.equals("upload")) {
-                    uploadFile(call, result);
-                } else if (call.method.equals("resume")) {
-                    resume(tag);
-                } else if (call.method.equals("pause")) {
-                    pause(tag);
-                } else if (call.method.equals("cancel")) {
-                    cancel(tag);
+                switch (call.method) {
+                    case "upload":
+                        uploadFile(call, result);
+                        break;
+                    case "resume":
+                        resume(tag);
+                        break;
+                    case "pause":
+                        pause(tag);
+                        break;
+                    case "cancel":
+                        cancel(tag);
+                        break;
                 }
-
             }
         });
     }
